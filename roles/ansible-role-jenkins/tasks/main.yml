@@ -1,0 +1,35 @@
+---
+- name: Install prerequisites
+  yum:
+    name:
+      - vim
+      - wget
+      - "{{java.VERSION}}"
+    state: present
+
+- name: Download jenkins.repo
+  get_url:
+    url: "{{jenkins.repo_URL}}"
+    dest: /etc/yum.repos.d/jenkins.repo
+
+- name: Import GPG Key
+  rpm_key:
+    state: present
+    key: "{{jenkins.gpg_key}}"
+
+- name: Ensure Jenkins is Installed
+  yum :
+    name: jenkins
+    update_cache: yes
+    state: present
+
+- name: Change Jenkins Java options
+  lineinfile: 
+    dest=/etc/sysconfig/jenkins
+    regex=^JENKINS_JAVA_OPTIONS= 
+    line=JENKINS_JAVA_OPTIONS="{{jenkins.JAVA_OPTIONS}}"
+  become: true
+  
+- name: Start Jenkins server and enable it
+  systemd: name=jenkins state=restarted enabled=yes
+  become: yes
